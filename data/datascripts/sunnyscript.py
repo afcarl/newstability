@@ -1,6 +1,6 @@
 from subprocess import call
 
-with open(sunnyvale.sh", "w") as of:
+with open("sunnyvale.sh", "w") as of:
     of.write("#!/bin/bash\n")
     of.write("#PBS -l nodes=1:ppn=1\n")
     of.write("#PBS -q workq\n")
