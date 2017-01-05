@@ -7,7 +7,9 @@ import sys
 
 def collision(reb_sim, col):
     reb_sim.contents._status = 5
-    return
+    for p in reb_sim.contents.particles[1:]:
+        print(p.orbit)
+    return 0
 
 maxorbs = 1.e4
 path = '' #'/mnt/raid-cita/dtamayo/newstability/data/'
@@ -53,13 +55,17 @@ sim.integrator="whfast"
 sim.ri_whfast.safe_mode = 0
 sim.G = 4*np.pi**2
 
+minhill = min(hill12, hill23)
 sim.add(m=1.)
-sim.add(m=M1, a=a1, e=e1, pomega=random()*2.*np.pi, inc=i1, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=hill12)
-sim.add(m=M2, a=a2, e=e2, pomega=random()*2.*np.pi, inc=i2, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=max(hill12, hill23))
-sim.add(m=M3, a=a3, e=e3, pomega=random()*2.*np.pi, inc=i3, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=hill23)
+sim.add(m=M1, a=a1, e=e1, pomega=random()*2.*np.pi, inc=i1, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=minhill)
+sim.add(m=M2, a=a2, e=e2, pomega=random()*2.*np.pi, inc=i2, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=minhill)
+sim.add(m=M3, a=a3, e=e3, pomega=random()*2.*np.pi, inc=i3, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=minhill)
 sim.move_to_com()
 ps = sim.particles
 
+for p in ps[1:]:
+    print(p.orbit)
+print('**')
 sim.dt = 0.09 # 0.09 of inner orbital period
 sim.collision = "direct"
 sim.collision_resolve = collision
@@ -85,4 +91,4 @@ with open(fname, 'w') as f:
     f.write(str(sim_id))
     for feature in features:
         f.write(',{0}'.format(feature))
-        f.write('\n')
+    f.write('\n')
