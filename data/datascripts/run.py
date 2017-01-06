@@ -11,8 +11,8 @@ def collision(reb_sim, col):
     #    print(p.orbit)
     return 0
 
-maxorbs = 1.e4
-path = '' #'/mnt/raid-cita/dtamayo/newstability/data/'
+maxorbs = 1.e9
+path = '/mnt/raid-cita/dtamayo/newstability/data/'
 
 a1 = 1. # All distances in units of the innermost semimajor axis (always at 1)
 Mstar = 1. # All masses in units of stellar mass
@@ -85,7 +85,7 @@ for p in ps[1:sim.N_real]:
 E0 = sim.calculate_energy()
 t0 = time.time()
 
-sim.initSimulationArchive(path+'runs/run'+str(sim_id)+'.bin', interval=maxorbs/100.)
+sim.initSimulationArchive(path+'runs/run'+str(sim_id)+'.bin', interval=maxorbs/1000.)
 sim.integrate(maxorbs)
 
 if sim.t < maxorbs-1.: # allow for some fudge for t=999999999...
