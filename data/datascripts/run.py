@@ -43,6 +43,8 @@ beta2 = uniform(betamin, betamax)
 a3 = a2 + beta2*hill23
 ecrit23 = (a3-a2)/a3
 
+minhill = min(hill12, hill23)
+
 logemax1 = np.log10(efac*ecrit12)
 logemax2 = np.log10(efac*min(ecrit12, ecrit23))
 logemax3 = np.log10(efac*ecrit23)
@@ -63,7 +65,11 @@ sim.integrator="whfast"
 sim.ri_whfast.safe_mode = 0
 sim.G = 4*np.pi**2
 
-minhill = min(hill12, hill23)
+sim2 = rebound.Simulation()
+sim2.integrator="whfast"
+sim2.ri_whfast.safe_mode = 0
+sim2.G = 4*np.pi**2
+
 sim.add(m=1.)
 sim.add(m=M1, a=a1, e=e1, pomega=random()*2.*np.pi, inc=i1, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=minhill)
 sim.add(m=M2, a=a2, e=e2, pomega=random()*2.*np.pi, inc=i2, Omega=random()*2.*np.pi, f=random()*2.*np.pi, r=minhill)
@@ -71,6 +77,13 @@ sim.add(m=M3, a=a3, e=e3, pomega=random()*2.*np.pi, inc=i3, Omega=random()*2.*np
 sim.move_to_com()
 ps = sim.particles
 
+for p in ps: # add small kick for shadow simulation
+    sim2.add(p)
+ps2 = sim2.particles
+kicksize=1.e-15
+ps2[1].x *= 1. + uniform(-1,1)*kicksize
+ps2[2].x *= 1. + uniform(-1,1)*kicksize
+ps2[3].x *= 1. + uniform(-1,1)*kicksize
 #for p in ps[1:]:
 #    print(p.orbit)
 #print('**')
@@ -78,11 +91,26 @@ sim.dt = 0.09 # 0.09 of inner orbital period
 sim.collision = "direct"
 sim.collision_resolve = collision
 
+sim2.dt = 0.09 # 0.09 of inner orbital period
+sim2.collision = "direct"
+sim2.collision_resolve = collision
+
 features = [(a2-a1)/hill12, (a3-a2)/hill23]
+a1 = ps2[1].a
+a2 = ps2[2].a
+a3 = ps2[3].a
+hill12 = a1*((M1+M2)/3.)**(1./3.)
+hill23 = a2*((M2+M3)/3.)**(1./3.)
+features2 = [(a2-a1)/hill12, (a3-a2)/hill23]
+
 for p in ps[1:sim.N_real]:
     features += [p.m, p.a, p.P, p.e, p.pomega, p.inc, p.Omega, p.f]
+for p in ps2[1:sim2.N_real]:
+    features2 += [p.m, p.a, p.P, p.e, p.pomega, p.inc, p.Omega, p.f]
 
 E0 = sim.calculate_energy()
+E02 = sim2.calculate_energy()
+
 t0 = time.time()
 
 sim.initSimulationArchive(path+'runs/run'+str(sim_id)+'.bin', interval=maxorbs/1000.)
@@ -98,5 +126,29 @@ fname = path+'csvs/run'+str(sim_id)+'.csv'
 with open(fname, 'w') as f:
     f.write(str(sim_id))
     for feature in features:
-        f.write(',{0}'.format(feature))
+        try:
+            f.write(',{0:.16e}'.format(feature))
+        except:
+            f.write(',{0}'.format(feature))
     f.write('\n')
+
+t0 = time.time()
+sim2.initSimulationArchive(path+'runs/shadow'+str(sim_id)+'.bin', interval=maxorbs/1000.)
+sim2.integrate(maxorbs)
+
+if sim2.t < maxorbs-1.: # allow for some fudge for t=999999999...
+    stable = ['False']
+else:
+    stable = ['True']
+
+features2 = stable+[sim2.t]+features2+[np.abs((sim2.calculate_energy()-E02)/E02), time.time()-t0]
+fname = path+'csvs/shadow'+str(sim_id)+'.csv'
+with open(fname, 'w') as f:
+    f.write(str(sim_id))
+    for feature in features2:
+        try:
+            f.write(',{0:.16e}'.format(feature))
+        except:
+            f.write(',{0}'.format(feature))
+    f.write('\n')
+
