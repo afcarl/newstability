@@ -23,7 +23,7 @@ logemin = np.log10(1.e-3)
 logincmin = np.log10(1.e-3)
 logincmax = np.log10(0.1) # max mutual inclination of 11.4 degrees
 betamin = 1. # min separation in Hill radii
-betamax = 20.
+betamax = 30.
 efac = 0.5
 sim_id = sys.argv[1]
 
